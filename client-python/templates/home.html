@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Hero -->
+<div style="background:#FFF8E7;border-bottom:2px solid #96AD90">
+  <div class="max-w-6xl mx-auto px-8 py-12">
+    <h1 class="text-4xl font-extrabold mb-3" style="color:#2D5A27">Learn Technology Bilingually</h1>
+    <p class="text-lg max-w-2xl" style="color:#5a7a55">
+      Read technical articles in English with instant translations in Hindi, Tamil, Telugu, Malayalam, and Kannada.
+    </p>
+    {% if not session.get('token') %}
+    <div class="mt-6 flex gap-3">
+      <a href="{{ url_for('register') }}" class="px-6 py-2.5 rounded-lg font-semibold text-sm text-white transition-colors" style="background:#2D5A27" onmouseover="this.style.background='#1e3d1a'" onmouseout="this.style.background='#2D5A27'">Get Started</a>
+      <a href="{{ url_for('login') }}" class="px-6 py-2.5 rounded-lg font-semibold text-sm transition-colors" style="background:#96AD90;color:#1e3d1a" onmouseover="this.style.background='#7a9674'" onmouseout="this.style.background='#96AD90'">Sign In</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="max-w-6xl mx-auto px-8 py-10">
+
+  <!-- Last Studied (logged in only) -->
+  {% if session.get('token') %}
+  <div class="mb-10" style="max-width:420px">
+    <div class="rounded-xl p-6" style="background:#fff;border:1.5px solid #c8dbc5">
+      <p class="text-xs font-bold uppercase tracking-widest mb-3" style="color:#96AD90">&#128218; Last Studied</p>
+      {% if last_studied %}
+      <a href="{{ url_for('unit', unit_id=last_studied.unit_id) }}"
+         class="block rounded-lg px-4 py-3 transition-all"
+         style="background:#FFF8E7;border:1.5px solid #96AD90"
+         onmouseover="this.style.borderColor='#2D5A27'" onmouseout="this.style.borderColor='#96AD90'">
+        <p class="text-xs font-semibold mb-0.5" style="color:#96AD90">{{ last_studied.category | capitalize }}</p>
+        <p class="text-sm font-bold" style="color:#1a2e18">{{ last_studied.title }}</p>
+        <p class="text-xs mt-1" style="color:#D2B48C">{{ last_studied.at }}</p>
+      </a>
+      {% else %}
+      <p class="text-sm" style="color:#96AD90">No course studied yet. Start one below!</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Course Cards -->
+  <h2 class="text-xl font-bold mb-6" style="color:#2D5A27">Courses</h2>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    {% for cat, border, label, desc in [
+      ('JavaScript', '#D2B48C', '#7a4a1e', 'Functions, ES6, Async'),
+      ('Python',     '#96AD90', '#2D5A27', 'Data, Scripting, ML'),
+      ('React',      '#D2B48C', '#7a4a1e', 'Components, Hooks, UI'),
+      ('Node.js',    '#96AD90', '#2D5A27', 'APIs, Server, Express'),
+      ('Databases',  '#D2B48C', '#7a4a1e', 'SQL, MongoDB, NoSQL')
+    ] %}
+    <a href="{{ url_for('courses', category=cat) }}"
+       class="flex flex-col p-6 rounded-xl border-2 transition-all duration-200"
+       style="background:#fff;border-color:{{ border }}"
+       onmouseover="this.style.boxShadow='0 4px 12px rgba(45,90,39,0.15)';this.style.borderColor='#2D5A27'"
+       onmouseout="this.style.boxShadow='none';this.style.borderColor='{{ border }}'">
+      <span class="text-base font-bold mb-1" style="color:{{ label }}">{{ cat }}</span>
+      <span class="text-xs mb-3" style="color:#96AD90">{{ desc }}</span>
+      <span class="text-xs font-semibold" style="color:#2D5A27">{{ counts[cat] }} Units</span>
+    </a>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

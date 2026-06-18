@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pymongo
+python-dotenv
+bcrypt
+pyjwt
+httpx
+python-multipart
+deep-translator

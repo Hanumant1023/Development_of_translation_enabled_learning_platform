@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BilingualLearn</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet"/>
+  <style>
+    /* 60% #FFF8E7 dominant | 30% #96AD90 secondary | 10% #2D5A27 accent | #D2B48C tan highlights */
+    body { background: #FFF8E7; }
+    .prose h1{font-size:1.6rem;font-weight:800;margin:1.5rem 0 .75rem;color:#1a2e18}
+    .prose h2{font-size:1.25rem;font-weight:700;margin:1.4rem 0 .6rem;color:#2D5A27;border-left:4px solid #2D5A27;padding-left:.6rem}
+    .prose h3{font-size:1.05rem;font-weight:700;margin:1.2rem 0 .4rem;color:#3a5c35}
+    .prose p{margin:.5rem 0;color:#4b5563;line-height:1.75}
+    .prose ul{list-style:disc;padding-left:1.4rem;margin:.5rem 0;color:#4b5563}
+    .prose ol{list-style:decimal;padding-left:1.4rem;margin:.5rem 0;color:#4b5563}
+    .prose li{margin:.25rem 0;line-height:1.7}
+    .prose pre{margin:.75rem 0;border-radius:.5rem;overflow-x:auto}
+    .prose code:not(pre code){background:#f0ede6;color:#7a4a1e;padding:.1rem .35rem;border-radius:.25rem;font-size:.85em}
+    .prose table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.9rem}
+    .prose th{background:#96AD90;color:#fff;font-weight:700;padding:.5rem .75rem;border:1px solid #7a9674;text-align:left}
+    .prose td{padding:.45rem .75rem;border:1px solid #d8e4d6;color:#374151}
+    .prose tr:nth-child(even) td{background:#f8f4ec}
+    .prose blockquote{border-left:4px solid #D2B48C;background:#fdf6ec;padding:.5rem 1rem;margin:.75rem 0;border-radius:0 .4rem .4rem 0;color:#7a5c2e;font-style:italic}
+    .prose strong{color:#1a2e18;font-weight:700}
+    .prose hr{border:none;border-top:1px solid #d8e4d6;margin:1.25rem 0}
+    .section-card{background:#fff;border:1px solid #c8dbc5;border-radius:.75rem;padding:1.5rem 2rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(45,90,39,0.07)}
+  </style>
+</head>
+<body class="min-h-screen flex flex-col" style="background:#FFF8E7">
+
+  <nav style="background:#2D5A27" class="px-8 py-4 flex items-center justify-between shadow-md">
+    <a href="{{ url_for('home') }}" class="text-xl font-bold text-white tracking-tight">BilingualLearn</a>
+    <div class="flex items-center gap-6">
+      <a href="{{ url_for('home') }}" class="text-sm font-medium text-green-100 hover:text-white transition-colors">Home</a>
+      {% if session.get('token') %}
+        <span class="text-sm font-medium text-white px-4 py-1.5 rounded-full" style="background:rgba(150,173,144,0.35)">
+          {{ session.get('user', {}).get('name', 'User') }}
+        </span>
+        <a href="{{ url_for('logout') }}" class="text-sm font-medium text-white bg-red-500 hover:bg-red-600 px-4 py-1.5 rounded-full transition-colors">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="text-sm font-medium text-green-100 hover:text-white transition-colors">Login</a>
+        <a href="{{ url_for('register') }}" class="text-sm font-medium text-white px-4 py-1.5 rounded-full transition-colors" style="background:#1e3d1a">Register</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="py-4 text-center text-sm font-medium" style="background:#96AD90;color:#1e3d1a;border-top:2px solid #7a9674">
+    BilingualLearn &copy; 2026
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-sql.min.js"></script>
+</body>
+</html>

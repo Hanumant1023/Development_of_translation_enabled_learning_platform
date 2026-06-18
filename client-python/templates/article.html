@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex flex-col" style="height: calc(100vh - 65px);">
+
+  <!-- Topbar -->
+  <div class="px-8 py-3 flex items-center justify-between shrink-0" style="background:#fff;border-bottom:2px solid #96AD90">
+    <div class="flex items-center gap-4">
+      <a href="javascript:history.back()" class="text-sm font-medium transition-colors" style="color:#96AD90" onmouseover="this.style.color='#2D5A27'" onmouseout="this.style.color='#96AD90'">&larr; Back</a>
+      <span style="color:#c8dbc5">|</span>
+      <span class="inline-block text-xs font-semibold px-2.5 py-1 rounded-full" style="background:#2D5A27;color:#fff">
+        {{ article.category }}
+      </span>
+      {% if article.unit_number %}
+        <span class="text-xs font-medium" style="color:#96AD90">Unit {{ article.unit_number }}</span>
+        <span style="color:#c8dbc5">|</span>
+      {% endif %}
+      <h1 class="text-sm font-semibold truncate max-w-md" style="color:#1a2e18">{{ article.title }}</h1>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <label class="text-xs font-medium" style="color:#96AD90">Translate to:</label>
+      <select id="lang-select"
+        class="rounded-lg px-3 py-1.5 text-sm focus:outline-none"
+        style="border:1.5px solid #96AD90;background:#FFF8E7;color:#2D5A27">
+        {% for lang in languages %}
+          <option value="{{ lang.code }}" {% if language == lang.code %}selected{% endif %}>{{ lang.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <!-- Split Panel -->
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- Left: English -->
+    <div class="flex-1 overflow-y-auto px-8 py-8" style="background:#FFF8E7;border-right:2px solid #96AD90">
+      <div class="max-w-2xl mx-auto">
+        <p class="text-xs font-bold uppercase tracking-widest mb-4" style="color:#96AD90">English</p>
+        {% if article.sections %}
+          {% for section in article.sections %}
+          <div class="section-card">
+            {% if section.heading %}
+              <h2 class="text-lg font-bold pl-3 mb-4" style="color:#2D5A27;border-left:4px solid #2D5A27">{{ section.heading }}</h2>
+            {% endif %}
+            <div class="prose section-body" data-html="{{ section.body_html | e }}"></div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="section-card">
+            <div class="prose">
+              <h2 class="text-2xl font-extrabold mb-4" style="color:#2D5A27">{{ article.title }}</h2>
+              <p>{{ article.content }}</p>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Attend Test Button -->
+        {% if article.quiz %}
+        <div class="mt-8 flex justify-center">
+          <button id="open-quiz-btn"
+            class="px-8 py-3 rounded-xl font-semibold text-sm transition-all"
+            style="background:#2D5A27;color:#fff;border:none;cursor:pointer;box-shadow:0 2px 8px rgba(45,90,39,0.18)"
+            onmouseover="this.style.background='#1e3d1b'" onmouseout="this.style.background='#2D5A27'">
+            &#9998; Attend Test
+          </button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right: Translation -->
+    <div class="flex-1 overflow-y-auto px-8 py-8" style="background:#f5f0e8">
+      <div class="max-w-2xl mx-auto">
+        <p id="lang-label" class="text-xs font-bold uppercase tracking-widest mb-4" style="color:#D2B48C">{{ lang_name }}</p>
+        <div id="translated-content">
+          <div class="text-center py-20 text-sm" style="color:#96AD90">Translating...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Quiz Modal -->
+{% if article.quiz %}
+<div id="quiz-modal" class="fixed inset-0 z-50 flex items-center justify-center" style="display:none!important;background:rgba(0,0,0,0.45)">
+  <div class="rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden" style="background:#FFF8E7;border:2px solid #96AD90">
+
+    <!-- Modal Header -->
+    <div class="px-6 py-4 flex items-center justify-between" style="background:#2D5A27">
+      <h2 class="text-base font-bold text-white">Unit Test &mdash; {{ article.title }}</h2>
+      <button id="close-quiz-btn" style="color:#c8dbc5;background:none;border:none;font-size:1.3rem;cursor:pointer;line-height:1">&times;</button>
+    </div>
+
+    <!-- Questions (rendered by JS) -->
+    <div id="quiz-body" class="px-6 py-6 overflow-y-auto" style="max-height:70vh"></div>
+
+    <!-- Footer -->
+    <div id="quiz-footer" class="px-6 py-4 flex items-center justify-between" style="border-top:1.5px solid #c8dbc5">
+      <span id="quiz-msg" class="text-xs" style="color:#96AD90"></span>
+      <button id="submit-quiz-btn"
+        class="px-6 py-2 rounded-lg font-semibold text-sm"
+        style="background:#2D5A27;color:#fff;border:none;cursor:pointer"
+        onmouseover="this.style.background='#1e3d1b'" onmouseout="this.style.background='#2D5A27'">
+        Submit Test
+      </button>
+    </div>
+
+    <!-- Score Panel (hidden until submit) -->
+    <div id="score-panel" class="px-6 py-8 text-center" style="display:none">
+      <div id="score-circle" class="mx-auto mb-4 flex items-center justify-center rounded-full font-extrabold text-2xl"
+        style="width:90px;height:90px;border:5px solid #2D5A27;color:#2D5A27;background:#fff"></div>
+      <p id="score-title" class="text-lg font-bold mb-1" style="color:#1a2e18"></p>
+      <p id="score-sub" class="text-sm mb-6" style="color:#96AD90"></p>
+      <button id="retake-btn"
+        class="px-6 py-2 rounded-lg font-semibold text-sm mr-3"
+        style="background:#96AD90;color:#fff;border:none;cursor:pointer"
+        onmouseover="this.style.background='#7a9474'" onmouseout="this.style.background='#96AD90'">
+        Retake Test
+      </button>
+      <button id="close-score-btn"
+        class="px-6 py-2 rounded-lg font-semibold text-sm"
+        style="background:#2D5A27;color:#fff;border:none;cursor:pointer"
+        onmouseover="this.style.background='#1e3d1b'" onmouseout="this.style.background='#2D5A27'">
+        Close
+      </button>
+    </div>
+
+  </div>
+</div>
+{% endif %}
+
+<script type="application/json" id="sections-data">{{ (article.sections or []) | tojson }}</script>
+<script type="application/json" id="quiz-data">{{ (article.quiz[:5] if article.quiz else []) | tojson }}</script>
+
+<script>
+(function() {
+  /* ── Translation ── */
+  var LANG_NAMES = {{ languages | tojson }};
+  var currentLang = {{ language | tojson }};
+  var target    = document.getElementById('translated-content');
+  var langLabel = document.getElementById('lang-label');
+  var langSel   = document.getElementById('lang-select');
+  var SEP       = '\n|||\n';
+
+  var sections = [];
+  try { sections = JSON.parse(document.getElementById('sections-data').textContent); } catch(e) {}
+
+  function translateOne(text, lang) {
+    return fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text || ' ', targetLang: lang })
+    }).then(function(r) { return r.json(); }).then(function(d) { return d.translated || text; }).catch(function() { return text; });
+  }
+
+  function translateBatch(texts, lang) {
+    return fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: texts.join(SEP), targetLang: lang })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      var parts = (d.translated || '').split(SEP);
+      if (parts.length !== texts.length) return Promise.all(texts.map(function(t) { return translateOne(t, lang); }));
+      return texts.map(function(t, i) { return parts[i] || t; });
+    }).catch(function() { return texts; });
+  }
+
+  // Convert body_html to plain readable text for translation
+  function htmlToPlain(html) {
+    var div = document.createElement('div');
+    div.innerHTML = html;
+
+    // Convert tables to "Key: Value" lines
+    div.querySelectorAll('table').forEach(function(table) {
+      var lines = [];
+      var headers = [];
+      table.querySelectorAll('thead th').forEach(function(th) { headers.push(th.textContent.trim()); });
+      table.querySelectorAll('tbody tr').forEach(function(tr) {
+        var cells = tr.querySelectorAll('td');
+        if (headers.length) {
+          var parts = [];
+          cells.forEach(function(td, i) {
+            if (headers[i]) parts.push(headers[i] + ': ' + td.textContent.trim());
+          });
+          lines.push(parts.join(' | '));
+        } else {
+          var row = [];
+          cells.forEach(function(td) { row.push(td.textContent.trim()); });
+          lines.push(row.join(' | '));
+        }
+      });
+      var replacement = document.createElement('p');
+      replacement.textContent = lines.join('\n');
+      table.replaceWith(replacement);
+    });
+
+    return div.textContent.trim();
+  }
+
+  function renderTranslation(lang) {
+    var name = '';
+    for (var i = 0; i < LANG_NAMES.length; i++) { if (LANG_NAMES[i].code === lang) { name = LANG_NAMES[i].name; break; } }
+    langLabel.textContent = name || lang;
+    target.innerHTML = '<div class="text-center py-10 text-sm" style="color:#96AD90">Translating...</div>';
+    if (!sections.length) { target.innerHTML = ''; return; }
+
+    var headings  = sections.map(function(s) { return s.heading || ''; });
+    var bodies    = sections.map(function(s) { return htmlToPlain(s.body_html || ''); });
+
+    Promise.all([
+      translateBatch(headings, lang),
+      translateBatch(bodies, lang)
+    ]).then(function(results) {
+      var transHeadings = results[0];
+      var transBodies   = results[1];
+      target.innerHTML = '';
+      sections.forEach(function(s, i) {
+        var card = document.createElement('div');
+        card.className = 'section-card';
+        if (transHeadings[i]) {
+          var h2 = document.createElement('h2');
+          h2.className = 'text-lg font-bold pl-3 mb-4';
+          h2.style.cssText = 'color:#2D5A27;border-left:4px solid #D2B48C';
+          h2.textContent = transHeadings[i];
+          card.appendChild(h2);
+        }
+        if (transBodies[i]) {
+          var p = document.createElement('p');
+          p.className = 'text-sm leading-relaxed';
+          p.style.cssText = 'color:#4b5563;white-space:pre-line';
+          p.textContent = transBodies[i];
+          card.appendChild(p);
+        }
+        target.appendChild(card);
+      });
+    }).catch(function() {
+      target.innerHTML = '<div class="text-center py-10 text-sm" style="color:#c0392b">Translation failed.</div>';
+    });
+
+    fetch('/set-language', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'language=' + lang });
+  }
+
+  // Render left panel bodies as plain text
+  document.querySelectorAll('.section-body').forEach(function(div) {
+    var html = div.getAttribute('data-html') || '';
+    var p = document.createElement('p');
+    p.className = 'text-sm leading-relaxed';
+    p.style.cssText = 'color:#4b5563;white-space:pre-line';
+    p.textContent = htmlToPlain(html);
+    div.appendChild(p);
+  });
+
+  langSel.addEventListener('change', function() { currentLang = this.value; renderTranslation(currentLang); });
+  renderTranslation(currentLang);
+
+  /* ── Quiz ── */
+  var quizData = [];
+  try { quizData = JSON.parse(document.getElementById('quiz-data').textContent); } catch(e) {}
+  if (!quizData.length) return;
+
+  var modal      = document.getElementById('quiz-modal');
+  var quizBody   = document.getElementById('quiz-body');
+  var scorePanel = document.getElementById('score-panel');
+  var quizFooter = document.getElementById('quiz-footer');
+  var quizMsg    = document.getElementById('quiz-msg');
+
+  // Build quiz HTML entirely in JS — no Jinja loop conflicts
+  function buildQuiz() {
+    quizBody.innerHTML = '';
+    quizData.forEach(function(q, qi) {
+      var block = document.createElement('div');
+      block.className = 'mb-6';
+      block.setAttribute('data-qi', qi);
+
+      var qText = document.createElement('p');
+      qText.className = 'font-semibold text-sm mb-3';
+      qText.style.color = '#1a2e18';
+      qText.innerHTML = '<span style="color:#2D5A27">Q' + (qi + 1) + '.</span> ' + q.question;
+      block.appendChild(qText);
+
+      var optWrap = document.createElement('div');
+      optWrap.className = 'flex flex-col gap-2';
+
+      q.options.forEach(function(opt, oi) {
+        var lbl = document.createElement('label');
+        lbl.className = 'quiz-option flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer text-sm';
+        lbl.style.cssText = 'border:1.5px solid #c8dbc5;background:#fff;color:#374151';
+
+        var radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'question_' + qi;   // unique per question, no conflict
+        radio.value = oi;
+        radio.style.display = 'none';
+
+        var dot = document.createElement('span');
+        dot.className = 'option-dot w-4 h-4 rounded-full shrink-0';
+        dot.style.cssText = 'border:2px solid #96AD90;background:#fff;display:inline-block;min-width:16px;min-height:16px';
+
+        var txt = document.createTextNode(opt);
+
+        lbl.appendChild(radio);
+        lbl.appendChild(dot);
+        lbl.appendChild(txt);
+        optWrap.appendChild(lbl);
+      });
+
+      block.appendChild(optWrap);
+      quizBody.appendChild(block);
+    });
+  }
+
+  function openModal() { buildQuiz(); resetStyles(); modal.style.display = 'flex'; }
+  function closeModal() { modal.style.display = 'none'; }
+
+  document.getElementById('open-quiz-btn').addEventListener('click', openModal);
+  document.getElementById('close-quiz-btn').addEventListener('click', closeModal);
+  document.getElementById('close-score-btn').addEventListener('click', closeModal);
+  document.getElementById('retake-btn').addEventListener('click', function() {
+    buildQuiz();
+    resetStyles();
+    quizBody.style.display = 'block';
+    quizFooter.style.display = 'flex';
+    scorePanel.style.display = 'none';
+    quizMsg.textContent = '';
+  });
+  modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+
+  // Option click — scoped strictly to the clicked question block
+  quizBody.addEventListener('click', function(e) {
+    var lbl = e.target.closest('.quiz-option');
+    if (!lbl) return;
+    var block = lbl.closest('[data-qi]');
+    if (!block) return;
+    // deselect all options in this question only
+    block.querySelectorAll('.quiz-option').forEach(function(l) {
+      l.classList.remove('selected');
+      l.style.borderColor = '#c8dbc5';
+      l.style.background = '#fff';
+      l.querySelector('.option-dot').style.background = '#fff';
+      l.querySelector('.option-dot').style.borderColor = '#96AD90';
+    });
+    var radio = lbl.querySelector('input[type=radio]');
+    radio.checked = true;
+    lbl.classList.add('selected');
+    lbl.style.borderColor = '#2D5A27';
+    lbl.style.background = '#f0f7ee';
+    lbl.querySelector('.option-dot').style.background = '#2D5A27';
+    lbl.querySelector('.option-dot').style.borderColor = '#2D5A27';
+  });
+
+  document.getElementById('submit-quiz-btn').addEventListener('click', function() {
+    var unanswered = [];
+    for (var i = 0; i < quizData.length; i++) {
+      if (!quizBody.querySelector('input[name="question_' + i + '"]:checked')) unanswered.push(i + 1);
+    }
+    if (unanswered.length) {
+      quizMsg.textContent = 'Please answer Q' + unanswered.join(', Q') + ' before submitting.';
+      quizMsg.style.color = '#c0392b';
+      return;
+    }
+    var score = 0;
+    for (var j = 0; j < quizData.length; j++) {
+      var checked = quizBody.querySelector('input[name="question_' + j + '"]:checked');
+      if (checked && parseInt(checked.value) === quizData[j].answer) score++;
+    }
+    quizBody.style.display = 'none';
+    quizFooter.style.display = 'none';
+    scorePanel.style.display = 'block';
+    var pct = Math.round((score / quizData.length) * 100);
+    document.getElementById('score-circle').textContent = score + '/' + quizData.length;
+    var title, sub, color;
+    if (pct === 100)    { title = 'Perfect Score!';    sub = 'Outstanding! You got everything right.'; color = '#2D5A27'; }
+    else if (pct >= 80) { title = 'Great Job!';        sub = 'You have a strong understanding.';       color = '#2D5A27'; }
+    else if (pct >= 60) { title = 'Good Effort!';      sub = 'Review the sections you missed.';        color = '#D2B48C'; }
+    else if (pct >= 40) { title = 'Keep Practicing!';  sub = 'Re-read the unit and try again.';        color = '#e07b39'; }
+    else                { title = 'Needs Improvement'; sub = 'Go through the unit carefully.';         color = '#c0392b'; }
+    document.getElementById('score-circle').style.borderColor = color;
+    document.getElementById('score-circle').style.color = color;
+    document.getElementById('score-title').textContent = title;
+    document.getElementById('score-sub').textContent = pct + '% — ' + sub;
+  });
+
+  function resetStyles() {
+    quizBody.style.display = 'block';
+    quizFooter.style.display = 'flex';
+    scorePanel.style.display = 'none';
+    quizMsg.textContent = '';
+  }
+}());
+</script>
+{% endblock %}

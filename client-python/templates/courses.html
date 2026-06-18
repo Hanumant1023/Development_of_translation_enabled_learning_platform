@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-8 py-10">
+
+  <!-- Breadcrumb -->
+  <div class="flex items-center gap-2 text-sm mb-6" style="color:#96AD90">
+    <a href="{{ url_for('home') }}" class="hover:underline" style="color:#2D5A27">Home</a>
+    <span>/</span>
+    <span class="font-medium" style="color:#1a2e18">{{ category }}</span>
+  </div>
+
+  <!-- Header -->
+  <div class="mb-4">
+    <h1 class="text-3xl font-extrabold" style="color:#2D5A27">{{ category }}</h1>
+    <p class="mt-1 text-sm" style="color:#96AD90">{{ units | length }} unit{{ 's' if units | length != 1 }} available</p>
+  </div>
+
+  <!-- Category Tabs: 30% secondary active, cream inactive -->
+  <div class="flex gap-2 flex-wrap mb-8">
+    {% for cat in categories %}
+    <a href="{{ url_for('courses', category=cat) }}"
+       class="text-xs font-semibold px-4 py-1.5 rounded-full border-2 transition-colors"
+       style="{% if cat == category %}background:#2D5A27;color:#fff;border-color:#2D5A27{% else %}background:#FFF8E7;color:#2D5A27;border-color:#96AD90{% endif %}">
+      {{ cat }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Unit Cards -->
+  {% if units %}
+  <div class="space-y-3">
+    {% for unit in units %}
+    <a href="{{ url_for('unit', unit_id=unit.id) }}"
+       class="flex items-center justify-between rounded-xl px-6 py-4 transition-all duration-200 group"
+       style="background:#fff;border:1.5px solid #c8dbc5"
+       onmouseover="this.style.borderColor='#2D5A27';this.style.boxShadow='0 2px 10px rgba(45,90,39,0.12)'"
+       onmouseout="this.style.borderColor='#c8dbc5';this.style.boxShadow='none'">
+      <div class="flex-1 min-w-0">
+        <h3 class="text-sm font-semibold truncate" style="color:#1a2e18">{{ unit.title }}</h3>
+        <p class="text-xs mt-1 truncate" style="color:#96AD90">{{ unit.content[:100] }}...</p>
+      </div>
+      <!-- 10% accent arrow -->
+      <span class="ml-4 text-sm font-bold shrink-0" style="color:#2D5A27">Start &rarr;</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-20" style="color:#96AD90">
+    <p class="text-base font-medium">No units found in this category.</p>
+    <a href="{{ url_for('home') }}" class="mt-3 inline-block text-sm font-semibold hover:underline" style="color:#2D5A27">Back to Dashboard</a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

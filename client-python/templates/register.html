@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-full flex items-center justify-center py-16 px-4" style="background:#FFF8E7">
+  <div class="w-full max-w-sm rounded-2xl p-8" style="background:#fff;border:1.5px solid #96AD90;box-shadow:0 4px 16px rgba(45,90,39,0.10)">
+    <h2 class="text-2xl font-extrabold mb-1" style="color:#2D5A27">Create account</h2>
+    <p class="text-sm mb-6" style="color:#96AD90">Start learning bilingually today</p>
+
+    {% if error %}
+    <div class="text-sm rounded-lg px-4 py-3 mb-5" style="background:#fdf0f0;border:1px solid #f5c6c6;color:#c0392b">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1" style="color:#2D5A27">Full Name</label>
+        <input type="text" name="name" placeholder="Your full name" required
+          class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none transition"
+          style="border:1.5px solid #96AD90;background:#FFF8E7"
+          onfocus="this.style.borderColor='#2D5A27'" onblur="this.style.borderColor='#96AD90'"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1" style="color:#2D5A27">Email</label>
+        <input type="email" name="email" placeholder="you@example.com" required
+          class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none transition"
+          style="border:1.5px solid #96AD90;background:#FFF8E7"
+          onfocus="this.style.borderColor='#2D5A27'" onblur="this.style.borderColor='#96AD90'"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1" style="color:#2D5A27">Password</label>
+        <input type="password" name="password" placeholder="Create a password" required
+          class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none transition"
+          style="border:1.5px solid #96AD90;background:#FFF8E7"
+          onfocus="this.style.borderColor='#2D5A27'" onblur="this.style.borderColor='#96AD90'"/>
+      </div>
+      <!-- 10% accent CTA button -->
+      <button type="submit"
+        class="w-full py-2.5 rounded-lg font-semibold text-sm text-white transition-colors"
+        style="background:#2D5A27"
+        onmouseover="this.style.background='#1e3d1a'" onmouseout="this.style.background='#2D5A27'">
+        Create Account
+      </button>
+    </form>
+
+    <p class="text-sm text-center mt-6" style="color:#96AD90">
+      Already have an account?
+      <a href="{{ url_for('login') }}" class="font-semibold hover:underline" style="color:#2D5A27">Sign in</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
